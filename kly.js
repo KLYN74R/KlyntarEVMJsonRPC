@@ -15,7 +15,40 @@
 
 */
 
-METHODS_MAPPING.set('eth_chainId',_=>7331)
+
+//Blockchain work imitation
+let block = 13371383,blockInHex=block.toString(16)
+
+setInterval(()=>{
+
+    block++
+    
+    blockInHex = block.toString(16)
+
+    console.log(`[+] [${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}] New block in KLY-EVM created => `,block)
+
+},2000)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+METHODS_MAPPING.set('eth_chainId',_=>'0x1CA3')
 
 METHODS_MAPPING.set('eth_protocolVersion',_=>"1337")
 
@@ -41,7 +74,7 @@ METHODS_MAPPING.set('eth_gasPrice',_=>{
     //Returns the current price per gas in wei
     //do it later(we should migrate to energy)
     // + we'll add more advanced way to count
-    return 1337_1337_1337
+    return '0x1F21F020C9'
 
 })
 
@@ -54,7 +87,7 @@ METHODS_MAPPING.set('eth_accounts',_=>[])
 METHODS_MAPPING.set('eth_blockNumber',_=>{
 
     //But for tests now it's 13371337
-    return 1337_1337
+    return '0x'+blockInHex//'0xCC07C9'
 
 })
 
@@ -63,10 +96,10 @@ METHODS_MAPPING.set('eth_getBalance',params=>{
 
     let [address,quantityOrTag] = params
 
-    // But for tests now it's 13371337
+    // But for tests now it's 13371337133713371337(5 times). It's 13,37 KLY
     // Returns current balance in wei (1 ether=10^9 gwei=10^18 wei)
     
-    return 1337_1337_1337
+    return '0xb99088475af9b000'
 
 })
 
@@ -86,9 +119,9 @@ METHODS_MAPPING.set('eth_getTransactionCount',params=>{
 
     let [address,quantityOrTag] = params
 
-    //But for tests now it's 13371337
+    //But for tests now it's 1337
 
-    return 1337
+    return '0x539'
 
 })
 
@@ -100,7 +133,7 @@ METHODS_MAPPING.set('eth_getBlockTransactionCountByHash',params=>{
 
     //Again - take from storage
 
-    return 1337
+    return '0x539'
 
 })
 
@@ -111,7 +144,7 @@ METHODS_MAPPING.set('eth_getBlockTransactionCountByNumber',params=>{
 
     //Again - take from storage
 
-    return 1337
+    return '0x539'
 
 })
 
@@ -199,7 +232,7 @@ METHODS_MAPPING.set('eth_estimateGas',params=>{
     //getGasAmountForContractCall()
 
     // the return value of executed contract
-    return 21000
+    return '0x5208'
     
 })
 
@@ -211,7 +244,7 @@ METHODS_MAPPING.set('eth_getBlockByHash',params=>{
 
     //WE'll get block headers from storage/cache
 
-    return 21000 
+    return '0x5208'
     
 })
 

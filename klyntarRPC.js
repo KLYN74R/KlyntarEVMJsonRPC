@@ -105,6 +105,6 @@ UWS.App()
 
 .listen(7331,descriptor=>{
 
-    console.log("[+] JSON-RPC for KLY-EVM is available on port 7331")
+    console.log(`[+] [${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}] JSON-RPC for KLY-EVM is available on port 7331`)
 
 })
