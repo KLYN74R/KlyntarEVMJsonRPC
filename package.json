@@ -1,0 +1,25 @@
+{
+  "name": "klyntarevmjsonrpc",
+  "version": "1.0.0",
+  "description": "A JSON-RPC2.0 implemetation for KLYNTAR to be EVM compatible",
+  "main": "klyntarRPC.js",
+  "type": "module",
+  "bin": {
+    "klyntar-rpc": "klyntarRPC.js"
+  },
+  "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KLYN74R/KlyntarEVMJsonRPC.git"
+  },
+  "author": "KlyntarTeam",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/KLYN74R/KlyntarEVMJsonRPC/issues"
+  },
+  "homepage": "https://github.com/KLYN74R/KlyntarEVMJsonRPC#readme",
+  "dependencies": {
+    "keccak256": "^1.0.6",
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.3.0"
+  }
+}
