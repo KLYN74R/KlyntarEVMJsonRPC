@@ -12,6 +12,10 @@
 
    [+] https://klyntar.org/kly-evm/json-rpc2.0
    [+] https://ethereum.org/ru/developers/docs/apis/json-rpc
+   [+] https://metamask.github.io/api-playground/api-documentation/
+   [+] https://documenter.getpostman.com/view/4117254/ethereum-json-rpc/RVu7CT5J
+   
+
 
 */
 
@@ -218,6 +222,10 @@ METHODS_MAPPING.set('eth_call',params=>{
     let [transaction] = params
 
     // the return value of executed contract
+
+    // On the machine where we make .runCall({tx,block}) we return
+    // '0x'+execResult.returnValue.toString('hex') to get the exectution result(contract interaction/default tx)
+
     return "0xa3f20717a250c2b0b729b7e5becbff67fdaef7e0699da4de7ca5895b02a170a12d887fd3b17bfdce3481f10bea41f45ba9f709d39ce8325427b57afcfc994cee1b"
     
 })
