@@ -76,6 +76,9 @@ export let EVM_ROUTE_HANDLER = response => response.writeHeader('Access-Control-
 
     if(!body) response.end(ERROR_RETURN(-32700,"Parse error",body.id))
 
+    console.log('==== BODY IS =======')
+
+    console.log(body)
 
     if(body.jsonrpc==='2.0' && typeof body.method==='string' && Array.isArray(body.params)){
 

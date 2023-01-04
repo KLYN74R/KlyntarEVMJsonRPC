@@ -1,4 +1,4 @@
-METHODS_MAPPING.set('net_version',_=>"0x1CA3") //7331 in hex. Will be custom via configs
+METHODS_MAPPING.set('net_version',_=>CONFIG.EVM.networkId)
 
 METHODS_MAPPING.set('net_listening',_=>true)
 

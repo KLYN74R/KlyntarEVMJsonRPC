@@ -19,72 +19,94 @@
 
 */
 
-
-//Blockchain work imitation
-let block = 13371383,blockInHex=block.toString(16)
-
-setInterval(()=>{
-
-    block++
-    
-    blockInHex = block.toString(16)
-
-    console.log(`[+] [${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}] New block in KLY-EVM created => `,block)
-
-},2000)
+import web3 from 'web3'
 
 
+METHODS_MAPPING.set('eth_chainId',_=>CONFIG.EVM.chainId)
+
+METHODS_MAPPING.set('eth_protocolVersion',_=>CONFIG.EVM.protocolVersionInHex)
+
+//Or do smth with VERIFICATION_THREAD | GENERATION_THREAD
+METHODS_MAPPING.set('eth_syncing',_=>false)
 
 
+//___________________________________Don't need in KLY symbiotes___________________________________
 
+METHODS_MAPPING.set('eth_coinbase',_=>CONFIG.EVM.coinbase)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-METHODS_MAPPING.set('eth_chainId',_=>'0x1CA3')
-
-METHODS_MAPPING.set('eth_protocolVersion',_=>"1337")
-
-METHODS_MAPPING.set('eth_syncing',_=>{
-
-    return false
-
-    //Or do smth with VERIFICATION_THREAD | GENERATION_THREAD
-
-})
-
-// Don't need in KLY
-METHODS_MAPPING.set('eth_coinbase',_=>'0x0000000000000000000000000000000000000000')
-
-// Don't need in KLY
 METHODS_MAPPING.set('eth_mining',_=>false)
 
-// Don't need in KLY
 METHODS_MAPPING.set('eth_hashrate',_=>0)
 
-METHODS_MAPPING.set('eth_gasPrice',_=>{
-
-    //Returns the current price per gas in wei
-    //do it later(we should migrate to energy)
-    // + we'll add more advanced way to count
-    return '0x1F21F020C9'
-
-})
+METHODS_MAPPING.set('eth_accounts',_=>[])
 
 
 // Don't need in KLY
-METHODS_MAPPING.set('eth_accounts',_=>[])
+// Info: We'll use simple blocks without uncles, so this value will be 0 by default
+// However, if you use our KLY-EVM JSON-RPC2.0 implementation you'll need to change behaviour
+METHODS_MAPPING.set('eth_getUncleCountByBlockHash',_=>0)
+
+METHODS_MAPPING.set('eth_getUncleCountByBlockNumber',_=>0)
+
+// Returns information about a uncle of a block by hash and uncle index position
+METHODS_MAPPING.set('eth_getUncleByBlockHashAndIndex',_=>{})
+
+METHODS_MAPPING.set('eth_getUncleByBlockNumberAndIndex',_=>{})
+
+
+// MINING STUFF ___________________________
+
+// Don't need in KLY
+METHODS_MAPPING.set('eth_getWork',_=>
+
+    [
+
+        '0x0000000000000000000000000000000000000000000000000000000000000000',
+        '0x0000000000000000000000000000000000000000000000000000000000000000',
+        '0x0000000000000000000000000000000000000000000000000000000000000000'
+
+    ]
+    
+)
+
+
+// Don't need in KLY
+METHODS_MAPPING.set('eth_submitWork',_=>
+
+    [
+
+        '0x0000000000000000',
+        '0x0000000000000000000000000000000000000000000000000000000000000000',
+        '0x0000000000000000000000000000000000000000000000000000000000000000'
+
+    ]
+    
+)
+
+
+
+
+// Don't need in KLY
+METHODS_MAPPING.set('eth_submitHashrate',_=>
+
+    [
+        '0x0000000000000000000000000000000000000000000000000000000000000000',
+        '0x0000000000000000000000000000000000000000000000000000000000000000'
+    ]
+    
+)
+
+
+
+
+//___________________________________Used on KLY symbiotes___________________________________
+
+
+//Returns the current price per gas in wei
+//do it later(we should migrate to energy)
+// + we'll add more advanced way to count
+
+METHODS_MAPPING.set('eth_gasPrice',_=>CONFIG.EVM.gasPriceInWeiAndHex)
 
 
 // We'll return blocknumber in order to changes in KLYNTAR symbiote
@@ -95,17 +117,37 @@ METHODS_MAPPING.set('eth_blockNumber',_=>{
 
 })
 
+
+
+
 // We'll take balances from local storage
-METHODS_MAPPING.set('eth_getBalance',params=>{
+METHODS_MAPPING.set('eth_getBalance',async params=>{
 
     let [address,quantityOrTag] = params
 
-    // But for tests now it's 13371337133713371337(5 times). It's 13,37 KLY
-    // Returns current balance in wei (1 ether=10^9 gwei=10^18 wei)
-    
-    return '0xb99088475af9b000'
+    let account = await KLY_EVM.getAccount(address)
+
+    let balanceInHexAndInWei = web3.utils.toHex(web3.utils.fromWei(account.balance.toString(),'ether'))
+
+    return balanceInHexAndInWei
+
 
 })
+
+
+// Returns the number of transactions sent from an address
+METHODS_MAPPING.set('eth_getTransactionCount',async params=>{
+
+    let [address,quantityOrTag] = params
+
+    let account = await KLY_EVM.getAccount(address)
+
+    let nonceInHex = web3.utils.toHex(account.nonce.toString())
+
+    return nonceInHex
+
+})
+
 
 // Returns the value from a storage position at a given address
 METHODS_MAPPING.set('eth_getStorageAt',params=>{
@@ -115,17 +157,6 @@ METHODS_MAPPING.set('eth_getStorageAt',params=>{
     //But for tests now it's 13371337
 
     return '0x13371337'
-
-})
-
-// Returns the number of transactions sent from an address
-METHODS_MAPPING.set('eth_getTransactionCount',params=>{
-
-    let [address,quantityOrTag] = params
-
-    //But for tests now it's 1337
-
-    return '0x539'
 
 })
 
@@ -152,23 +183,17 @@ METHODS_MAPPING.set('eth_getBlockTransactionCountByNumber',params=>{
 
 })
 
-// Don't need in KLY
-// Info: We'll use simple blocks without uncles, so this value will be 0 by default
-// However, if you use our KLY-EVM JSON-RPC2.0 implementation you'll need to change behaviour
-METHODS_MAPPING.set('eth_getUncleCountByBlockHash',_=>0)
-
-METHODS_MAPPING.set('eth_getUncleCountByBlockNumber',_=>0)
-
-
 
 // Returns code at a given address
-METHODS_MAPPING.set('eth_getCode',params=>{
+METHODS_MAPPING.set('eth_getCode',async params=>{
 
     let [address,quantityOrTag] = params
 
-    //But for tests now it's 13371337
+    let account = await KLY_EVM.getAccount(address)
 
-    return '0x600160008035811a818181146012578301005b601b6001356025565b8060005260206000f25b600060078202905091905056'
+    let codeHash = '0x'+Buffer.from(account.codeHash).toString('hex')
+
+    return codeHash
 
 })
 
@@ -194,7 +219,6 @@ METHODS_MAPPING.set('eth_signTransaction',params=>{
     return "0xa3f20717a250c2b0b729b7e5becbff67fdaef7e0699da4de7ca5895b02a170a12d887fd3b17bfdce3481f10bea41f45ba9f709d39ce8325427b57afcfc994cee1b"
     
 })
-
 
 // Creates new message call transaction or a contract creation, if the data field contains code
 METHODS_MAPPING.set('eth_sendTransaction',params=>{
@@ -297,11 +321,8 @@ METHODS_MAPPING.set('eth_getTransactionReceipt',params=>{
 })
 
 
-// Returns information about a uncle of a block by hash and uncle index position
-METHODS_MAPPING.set('eth_getUncleByBlockHashAndIndex',_=>{})
 
-METHODS_MAPPING.set('eth_getUncleByBlockNumberAndIndex',_=>{})
-
+//___________________________ COMPILLERS ___________________________
 
 
 METHODS_MAPPING.set('eth_getCompilers',_=>{
@@ -310,8 +331,6 @@ METHODS_MAPPING.set('eth_getCompilers',_=>{
     
 })
 
-
-//___________________________ COMPILLERS ___________________________
 
 METHODS_MAPPING.set('eth_compileSolidity',params=>{
 
@@ -413,47 +432,3 @@ METHODS_MAPPING.set('eth_getLogs',params=>{
     return ''
     
 })
-
-
-//___________________________ MINING STUFF ___________________________
-
-
-// Don't need in KLY
-METHODS_MAPPING.set('eth_getWork',_=>
-
-    [
-
-        '0x0000000000000000000000000000000000000000000000000000000000000000',
-        '0x0000000000000000000000000000000000000000000000000000000000000000',
-        '0x0000000000000000000000000000000000000000000000000000000000000000'
-
-    ]
-    
-)
-
-
-// Don't need in KLY
-METHODS_MAPPING.set('eth_submitWork',_=>
-
-    [
-
-        '0x0000000000000000',
-        '0x0000000000000000000000000000000000000000000000000000000000000000',
-        '0x0000000000000000000000000000000000000000000000000000000000000000'
-
-    ]
-    
-)
-
-
-
-
-// Don't need in KLY
-METHODS_MAPPING.set('eth_submitHashrate',_=>
-
-    [
-        '0x0000000000000000000000000000000000000000000000000000000000000000',
-        '0x0000000000000000000000000000000000000000000000000000000000000000'
-    ]
-    
-)

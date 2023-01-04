@@ -1,6 +1,6 @@
 {
   "name": "@klyntar/klyntarevmjsonrpc",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "A JSON-RPC2.0 implemetation for KLYNTAR to be EVM compatible",
   "main": "klyntarRPC.js",
   "type": "module",
@@ -20,6 +20,6 @@
   "homepage": "https://github.com/KLYN74R/KlyntarEVMJsonRPC#readme",
   "dependencies": {
     "keccak256": "^1.0.6",
-    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.3.0"
+    "web3": "^1.8.1"
   }
 }

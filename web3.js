@@ -2,7 +2,7 @@ import keccak256 from 'keccak256'
 
 
 
-METHODS_MAPPING.set('web3_clientVersion',_=>"KLY-EVM/dev_tachyon/v0.13.37/Node.js")
+METHODS_MAPPING.set('web3_clientVersion',_=>CONFIG.EVM.clientVersion)
 
 METHODS_MAPPING.set('web3_sha3',params=>{
 
