@@ -20,9 +20,6 @@ code	message	meaning
 */
 
 
-import UWS from 'uWebSockets.js'
-import {Buffer} from 'buffer'
-
 //Make it visible from all the modules
 global.METHODS_MAPPING=new Map()
 
@@ -69,11 +66,8 @@ let RETURN_RESULT=(result,id)=>JSON.stringify(
 
 
 
-//_____________ SERVER _____________
 
-UWS.App()
-
-.post('/',response=>response.writeHeader('Access-Control-Allow-Origin','*').onAborted(()=>response.aborted=true).onData(async v=>{
+export let EVM_ROUTE_HANDLER = response => response.writeHeader('Access-Control-Allow-Origin','*').onAborted(()=>response.aborted=true).onData(async v=>{
 
     //Body looks like this {"jsonrpc": "2.0", "method": "subtract", "params": [42, 23], "id": 1}
     //Response looks like {"jsonrpc": "2.0", "result": 19, "id": 1}
@@ -96,15 +90,5 @@ UWS.App()
         }else response.end(ERROR_RETURN(-32601,"Method not found",body.id))
 
     }else response.end(ERROR_RETURN(-32600,"Invalid Request",body.id))
-
-}))
-
-
-.get('/health',response=>response.end("KLYNTAR says <OK>"))
-
-
-.listen(7331,descriptor=>{
-
-    console.log(`[+] [${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}] JSON-RPC for KLY-EVM is available on port 7331`)
 
 })
