@@ -22,6 +22,7 @@
 import web3 from 'web3'
 
 
+let web3Instance = new web3()
 
 
 //___________________________________Used on KLY symbiotes___________________________________
@@ -206,14 +207,13 @@ METHODS_MAPPING.set('eth_call',params=>{
 
 
 //Generates and returns an estimate of how much gas is necessary to allow the transaction to complete
-METHODS_MAPPING.set('eth_estimateGas',params=>{
+METHODS_MAPPING.set('eth_estimateGas',async params=>{
 
     let [transaction] = params
 
-    //getGasAmountForContractCall()
+    let gasRequiredInHex = await KLY_EVM.estimateGasUsed(transaction)
 
-    // the return value of executed contract
-    return '0x5208'
+    return gasRequiredInHex
     
 })
 
