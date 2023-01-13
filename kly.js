@@ -191,22 +191,33 @@ METHODS_MAPPING.set('eth_sendTransaction',params=>{
 
 
 //Creates new message call transaction or a contract creation for signed transactions
-METHODS_MAPPING.set('eth_sendRawTransaction',params=>{
+METHODS_MAPPING.set('eth_sendRawTransaction',async params=>{
 
     // The signed transaction data
-    let [serializedTransactionInHexWithout0x] = params
+    let [serializedTransactionInHexWith0x] = params
 
-    let tx = Transaction.fromSerializedTx(Buffer.from(serializedTransactionInHexWithout0x,'hex'))
 
-    if(tx.validate() && tx.verifySignature()){
+    // Execute in KLY-EVM sandbox(via runCall) to get the returnValue(if success). After all checks, we can add the tx to mempool and return a hash
+    
+    let result = await KLY_EVM.sandboxCall(serializedTransactionInHexWith0x)
 
-        SYMBIOTE_META.MEMPOOL.push({type:'EVM_CALL',payload:serializedTransactionInHexWithout0x})
+    if(result === '0x'){
 
-        // Returns 32 Bytes - the transaction hash, or the zero hash if the transaction is not yet available
-        return `0x${tx.hash().toString('hex')}`
+        SYMBIOTE_META.MEMPOOL.push({type:'EVM_CALL',payload:serializedTransactionInHexWith0x})
 
+        try{
+
+            let tx = Transaction.fromSerializedTx(Buffer.from(serializedTransactionInHexWith0x.slice(2),'hex'))
+
+            return `0x${tx.hash().toString('hex')}`    
+
+        }finally {
+
+            return null
+
+        }
         
-    }else return '0x'
+    }else return null
 
 
 })
@@ -217,16 +228,11 @@ METHODS_MAPPING.set('eth_sendRawTransaction',params=>{
 //Executes a new message call immediately without creating a transaction on the block chain
 METHODS_MAPPING.set('eth_call',async params=>{
 
-    let [transactionInHex] = params
+    let [transactionInHexWith0x] = params
 
-    let currentTimestampInSeconds = Math.floor(GET_GMT_TIMESTAMP()/1000)
+    let executionResultInHex = await KLY_EVM.sandboxCall(transactionInHexWith0x,currentTimestampInSeconds).catch(_=>null)
 
-    let fullResult = await KLY_EVM.sandboxCall(transactionInHex,currentTimestampInSeconds)
-
-    // On the machine where we make .runCall({tx,block}) we return
-    // '0x'+execResult.returnValue.toString('hex') to get the exectution result(contract interaction/default tx)
-
-    return `0x${fullResult.execResult.returnValue.toString('hex')}`
+    return executionResultInHex
     
 })
 
@@ -236,9 +242,9 @@ METHODS_MAPPING.set('eth_call',async params=>{
 //Generates and returns an estimate of how much gas is necessary to allow the transaction to complete
 METHODS_MAPPING.set('eth_estimateGas',async params=>{
 
-    let [transaction] = params
+    let [txData] = params
 
-    let gasRequiredInHex = await KLY_EVM.estimateGasUsed(transaction)
+    let gasRequiredInHex = await KLY_EVM.estimateGasUsed(txData).catch(_=>null)
 
     return gasRequiredInHex
     
