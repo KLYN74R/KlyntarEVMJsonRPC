@@ -57,15 +57,7 @@ METHODS_MAPPING.set('eth_syncing',_=>false)
 METHODS_MAPPING.set('eth_gasPrice',_=>CONFIG.EVM.gasPriceInWeiAndHex)
 
 
-// We'll return blocknumber in order to changes in KLYNTAR symbiote
-METHODS_MAPPING.set('eth_blockNumber',_=>{
-
-    //But for tests now it's 13371337
-    return '0x'+blockInHex//'0xCC07C9'
-
-})
-
-
+METHODS_MAPPING.set('eth_blockNumber',_=>web3.utils.toHex(KLY_EVM.getCurrentBlock().header.number.toString()))
 
 
 // We'll take balances from local storage
@@ -77,7 +69,7 @@ METHODS_MAPPING.set('eth_getBalance',async params=>{
 
     if(account){
 
-        let balanceInHexAndInWei = web3.utils.toHex(web3.utils.fromWei(account.balance.toString(),'ether'))
+        let balanceInHexAndInWei = web3.utils.toHex(account.balance.toString())
 
         return balanceInHexAndInWei
     
@@ -353,9 +345,9 @@ METHODS_MAPPING.set('eth_getBlockByNumber',async params=>{
     // Get rid of 0x and parse as decimal
     let blockNumberInDecimal = parseInt(blockNumberInHex.slice(2),16)
    
-    let block = SYMBIOTE_META.KLY_EVM_META.get(blockNumberInDecimal).catch(_=>false)
+    let block = await SYMBIOTE_META.STATE.get('EVM_BLOCK:'+blockNumberInDecimal).catch(_=>false)
 
-    return block
+    return block || {error:'No block with such index'}
     
 
 })
@@ -373,18 +365,18 @@ METHODS_MAPPING.set('eth_getBlockByHash',async params=>{
 
     let [blockHash,fullOrNot] = params
 
-    let blockIndexByHash = await SYMBIOTE_META.KLY_EVM_META.get(blockHash.slice(2)).catch(_=>false)
+    let blockIndex = await SYMBIOTE_META.STATE.get('EVM_INDEX:'+blockHash.slice(2)).catch(_=>false) // get the block index by its hash
    
-    let block = await SYMBIOTE_META.KLY_EVM_META.get(blockIndexByHash).catch(_=>false)
+    let block = await SYMBIOTE_META.STATE.get('EVM_BLOCK:'+blockIndex).catch(_=>false)
 
-    return block
+    return block || {error:'No block with such hash'}
     
 })
 
 
 
 
-METHODS_MAPPING.set('eth_getTransactionByHash',params=>{
+METHODS_MAPPING.set('eth_getTransactionByHash',async params=>{
 
     /*
     
@@ -438,7 +430,9 @@ METHODS_MAPPING.set('eth_getTransactionByHash',params=>{
 
     let [txHash] = params
 
-    return {}
+    let {tx} = await SYMBIOTE_META.STATE.get('TX:'+txHash.slice(2)).catch(_=>false)
+
+    return tx || {error:'No such transaction. Make sure that hash is ok'}
     
 })
 
@@ -449,7 +443,7 @@ METHODS_MAPPING.set('eth_getTransactionByBlockNumberAndIndex',params=>{
 
     let [blockNumber,txIndex] = params
 
-    return null
+    return {error:'Not supported'}
     
 })
 
@@ -457,7 +451,7 @@ METHODS_MAPPING.set('eth_getTransactionByBlockNumberAndIndex',params=>{
 
 
 // Take from vm deploymentResult.receipt
-METHODS_MAPPING.set('eth_getTransactionReceipt',params=>{
+METHODS_MAPPING.set('eth_getTransactionReceipt',async params=>{
 
     /*
     
@@ -514,8 +508,11 @@ METHODS_MAPPING.set('eth_getTransactionReceipt',params=>{
 
     let [txHash] = params
 
-    return {}
-    
+    let {receipt} = await SYMBIOTE_META.STATE.get('TX:'+txHash.slice(2)).catch(_=>false)
+
+    return receipt || {error:'No such tx and receipt. Make sure that hash is ok'}
+
+
 })
 
 
