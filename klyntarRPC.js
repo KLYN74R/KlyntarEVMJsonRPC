@@ -86,7 +86,7 @@ export let EVM_ROUTE_HANDLER = response => response.writeHeader('Access-Control-
 
             let result = await METHODS_MAPPING.get(body.method)(body.params)
 
-            if(result.error) response.end(ERROR_RETURN(-32602,"Invalid params => "+result.error_msg,body.id))
+            if(result.error) response.end(ERROR_RETURN(-32602,"Invalid params => "+result.error,body.id))
 
             else response.end(RETURN_RESULT(result,body.id))
 

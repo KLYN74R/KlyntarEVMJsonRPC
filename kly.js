@@ -213,7 +213,11 @@ METHODS_MAPPING.set('eth_sendRawTransaction',async params=>{
     
     let result = await KLY_EVM.sandboxCall(serializedTransactionInHexWith0x).catch(_=>false)
 
-    if(result === '0x'){
+    if(result){
+
+        // It might be an error
+        if(result.error) return {error:JSON.stringify(result)}
+
 
         SYMBIOTE_META.MEMPOOL.push({type:'EVM_CALL',payload:serializedTransactionInHexWith0x})
 
@@ -242,12 +246,15 @@ METHODS_MAPPING.set('eth_call',async params=>{
 
     let [transactionInHexWith0x] = params
 
-    let executionResultInHex = await KLY_EVM.sandboxCall(transactionInHexWith0x,currentTimestampInSeconds).catch(_=>false)
+    let executionResultInHex = await KLY_EVM.sandboxCall(transactionInHexWith0x).catch(_=>false)
 
-    
+
     if(typeof executionResultInHex === 'string') return executionResultInHex
   
+    else if(executionResultInHex.error) return {error:JSON.stringify(executionResultInHex)}
+
     else return {error:'Impossible to run transaction in sandbox. Make sure tx format is ok'}
+  
     
 })
 
@@ -259,10 +266,12 @@ METHODS_MAPPING.set('eth_estimateGas',async params=>{
 
     let [txData] = params
 
-    let gasRequiredInHex = await KLY_EVM.estimateGasUsed(txData).catch(_=>false)
+    let gasRequiredInHexOrError = await KLY_EVM.estimateGasUsed(txData).catch(_=>false)
 
 
-    if(typeof executionResultInHex === 'string') return gasRequiredInHex
+    if(typeof gasRequiredInHexOrError === 'string') return gasRequiredInHexOrError
+
+    else if(gasRequiredInHexOrError.error) return {error:JSON.stringify(gasRequiredInHexOrError)}
     
     else return {error:'Impossible to run transaction in sandbox to estimate required amount of gas. Make sure tx format is ok'}
     
