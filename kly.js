@@ -73,12 +73,15 @@ METHODS_MAPPING.set('eth_getBalance',async params=>{
 
     let [address,quantityOrTag] = params
 
-    let account = await KLY_EVM.getAccount(address)
+    let account = await KLY_EVM.getAccount(address).catch(_=>false)
 
-    let balanceInHexAndInWei = web3.utils.toHex(web3.utils.fromWei(account.balance.toString(),'ether'))
+    if(account){
 
-    return balanceInHexAndInWei
+        let balanceInHexAndInWei = web3.utils.toHex(web3.utils.fromWei(account.balance.toString(),'ether'))
 
+        return balanceInHexAndInWei
+    
+    }else return {error:'Impossible to get account'}
 
 })
 
@@ -90,11 +93,15 @@ METHODS_MAPPING.set('eth_getTransactionCount',async params=>{
 
     let [address,quantityOrTag] = params
 
-    let account = await KLY_EVM.getAccount(address)
+    let account = await KLY_EVM.getAccount(address).catch(_=>false)
 
-    let nonceInHex = web3.utils.toHex(account.nonce.toString())
+    if(account){
 
-    return nonceInHex
+        let nonceInHex = web3.utils.toHex(account.nonce.toString())
+
+        return nonceInHex
+    
+    }else return {error:'Impossible to get account'}
 
 })
 
@@ -132,11 +139,16 @@ METHODS_MAPPING.set('eth_getCode',async params=>{
 
     let [address,quantityOrTag] = params
 
-    let account = await KLY_EVM.getAccount(address)
+    let account = await KLY_EVM.getAccount(address).catch(_=>false)
 
-    let codeHash = '0x'+Buffer.from(account.codeHash).toString('hex')
+    if(account){
 
-    return codeHash
+        let codeHash = '0x'+Buffer.from(account.codeHash).toString('hex')
+
+        return codeHash    
+    
+    }else return {error:'Impossible to get account'}
+
 
 })
 
@@ -199,7 +211,7 @@ METHODS_MAPPING.set('eth_sendRawTransaction',async params=>{
 
     // Execute in KLY-EVM sandbox(via runCall) to get the returnValue(if success). After all checks, we can add the tx to mempool and return a hash
     
-    let result = await KLY_EVM.sandboxCall(serializedTransactionInHexWith0x)
+    let result = await KLY_EVM.sandboxCall(serializedTransactionInHexWith0x).catch(_=>false)
 
     if(result === '0x'){
 
@@ -211,13 +223,13 @@ METHODS_MAPPING.set('eth_sendRawTransaction',async params=>{
 
             return `0x${tx.hash().toString('hex')}`    
 
-        }finally {
+        } catch {
 
-            return null
+          return {error:'Impossible to parse transaction to get hash. Make sure tx format is ok'}  
 
         }
         
-    }else return null
+    }else return {error:'Impossible to run transaction in sandbox. Make sure tx format is ok'}
 
 
 })
@@ -230,9 +242,12 @@ METHODS_MAPPING.set('eth_call',async params=>{
 
     let [transactionInHexWith0x] = params
 
-    let executionResultInHex = await KLY_EVM.sandboxCall(transactionInHexWith0x,currentTimestampInSeconds).catch(_=>null)
+    let executionResultInHex = await KLY_EVM.sandboxCall(transactionInHexWith0x,currentTimestampInSeconds).catch(_=>false)
 
-    return executionResultInHex
+    
+    if(typeof executionResultInHex === 'string') return executionResultInHex
+  
+    else return {error:'Impossible to run transaction in sandbox. Make sure tx format is ok'}
     
 })
 
@@ -244,9 +259,12 @@ METHODS_MAPPING.set('eth_estimateGas',async params=>{
 
     let [txData] = params
 
-    let gasRequiredInHex = await KLY_EVM.estimateGasUsed(txData).catch(_=>null)
+    let gasRequiredInHex = await KLY_EVM.estimateGasUsed(txData).catch(_=>false)
 
-    return gasRequiredInHex
+
+    if(typeof executionResultInHex === 'string') return gasRequiredInHex
+    
+    else return {error:'Impossible to run transaction in sandbox to estimate required amount of gas. Make sure tx format is ok'}
     
 })
 
