@@ -75,12 +75,8 @@ export let EVM_ROUTE_HANDLER = response => response.writeHeader('Access-Control-
     let body=await BODY(v,payloadLimit).catch(e=>e)
 
     if(!body) response.end(ERROR_RETURN(-32700,"Parse error",body.id))
-
-    console.log('==== BODY IS =======')
-
-    console.log(body)
-
-    if(body.jsonrpc==='2.0' && typeof body.method==='string' && Array.isArray(body.params)){
+    
+    else if(body.jsonrpc==='2.0' && typeof body.method==='string' && Array.isArray(body.params)){
 
         if(METHODS_MAPPING.has(body.method)){
 

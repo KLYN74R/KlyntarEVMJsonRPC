@@ -341,11 +341,8 @@ METHODS_MAPPING.set('eth_getBlockByNumber',async params=>{
     */
 
     let [blockNumberInHex,fullOrNot] = params
-
-    // Get rid of 0x and parse as decimal
-    let blockNumberInDecimal = parseInt(blockNumberInHex.slice(2),16)
    
-    let block = await SYMBIOTE_META.STATE.get('EVM_BLOCK:'+blockNumberInDecimal).catch(_=>false)
+    let block = await SYMBIOTE_META.STATE.get('EVM_BLOCK:'+blockNumberInHex).catch(_=>false)
 
     return block || {error:'No block with such index'}
     
@@ -365,7 +362,7 @@ METHODS_MAPPING.set('eth_getBlockByHash',async params=>{
 
     let [blockHash,fullOrNot] = params
 
-    let blockIndex = await SYMBIOTE_META.STATE.get('EVM_INDEX:'+blockHash.slice(2)).catch(_=>false) // get the block index by its hash
+    let blockIndex = await SYMBIOTE_META.STATE.get('EVM_INDEX:'+blockHash).catch(_=>false) // get the block index by its hash
    
     let block = await SYMBIOTE_META.STATE.get('EVM_BLOCK:'+blockIndex).catch(_=>false)
 
@@ -508,9 +505,9 @@ METHODS_MAPPING.set('eth_getTransactionReceipt',async params=>{
 
     let [txHash] = params
 
-    let {receipt} = await SYMBIOTE_META.STATE.get('TX:'+txHash.slice(2)).catch(_=>false)
+    let {receipt} = await SYMBIOTE_META.STATE.get('TX:'+txHash).catch(_=>false)
 
-    return receipt || {error:'No such tx and receipt. Make sure that hash is ok'}
+    return receipt || false
 
 
 })
@@ -519,7 +516,7 @@ METHODS_MAPPING.set('eth_getTransactionReceipt',async params=>{
 
 
 //Returns an array of all logs matching a given filter object
-METHODS_MAPPING.set('eth_getLogs',params=>{
+METHODS_MAPPING.set('eth_getLogs',async params=>{
 
 
     /*
@@ -598,10 +595,99 @@ METHODS_MAPPING.set('eth_getLogs',params=>{
 
     */
 
-    let [filterOptions] = params
+    let [queryOptions] = params
 
-    //We get logs from storage
-    return ''
+    let {filter,fromBlock,toBlock,address,topics} = queryOptions
+
+    let currentBlockIndex
+
+
+    let fromBlockIsHex = web3.utils.isHex(fromBlock)
+
+    let toBlockIsHex = web3.utils.isHex(toBlock)
+
+
+    
+    if((fromBlockIsHex || fromBlock === 'latest') && (toBlockIsHex || toBlock === 'latest')){
+
+
+        if(fromBlock === 'latest' || toBlock === 'latest'){
+
+            currentBlockIndex = KLY_EVM.getCurrentBlock().header.number
+    
+        }
+    
+    
+        if(fromBlockIsHex) fromBlock = BigInt(fromBlock)
+        
+        else if(fromBlock === 'latest') fromBlock = currentBlockIndex
+        
+    
+        if(toBlockIsHex) toBlock = BigInt(fromBlock)
+    
+        else if(toBlock === 'latest') toBlock = currentBlockIndex
+        
+        //____________________________ Go through the saved logs and get them ____________________________
+
+        let arrayWithLogsToResponse = []
+
+        
+        while(fromBlock!==toBlock){
+
+            let blockLogs = await SYMBIOTE_META.STATE.get('EVM_LOGS:'+web3.utils.toHex(fromBlock.toString())).catch(_=>false)
+
+            if(blockLogs){
+
+                /*
+                
+                blockLogs looks like this:
+                
+                {
+                    contractAddress0:[
+                        contractLog0_0,contractLog0_1,contractLog0_2,...,contractLog0_N
+                    ],
+                    
+                    contractAddress1:[
+                        contractLog1_0,contractLog1_1,contractLog1_2,...,contractLog1_N
+                    ],
+
+                    ...
+
+                    contractAddressM:[
+                        contractLogM_0,contractLogM_1,contractLogM_2,...,contractLogM_N
+                    ]
+                
+                }
+
+                */
+
+                // Find our contract
+
+                let contractRelatedArrayOfLogs = blockLogs[address]
+
+                //____________________________ Now, go through the topics and compare with requested ones ____________________________
+
+                if(contractRelatedArrayOfLogs){
+
+                    contractRelatedArrayOfLogs.forEach(
+                        
+                        singleLog => singleLog.topics.toString() === topics.toString() && arrayWithLogsToResponse.push(singleLog)
+                        
+                    )
+
+                }
+
+
+            }
+
+            fromBlock = fromBlock + BigInt(1)
+
+        }
+
+        return arrayWithLogsToResponse
+
+
+    }else return {error:`Wrong values of <fromBlock> or <toBlock>. Possible values are: <block_index_in_hex> | 'latest'`}
     
 })
 
