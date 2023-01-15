@@ -236,9 +236,9 @@ METHODS_MAPPING.set('eth_sendRawTransaction',async params=>{
 //Executes a new message call immediately without creating a transaction on the block chain
 METHODS_MAPPING.set('eth_call',async params=>{
 
-    let [transactionInHexWith0x] = params
+    let [transactionData] = params
 
-    let executionResultInHex = await KLY_EVM.sandboxCall(transactionInHexWith0x).catch(_=>false)
+    let executionResultInHex = await KLY_EVM.sandboxCall(transactionData,true).catch(_=>false)
 
 
     if(typeof executionResultInHex === 'string') return executionResultInHex
