@@ -24,17 +24,6 @@ import web3 from 'web3'
 
 
 
-let GET_GMT_TIMESTAMP=()=>{
-
-    var currentTime = new Date();
-    
-    //The offset is in minutes -- convert it to ms
-    //See https://stackoverflow.com/questions/9756120/how-do-i-get-a-utc-timestamp-in-javascript
-    return currentTime.getTime() + currentTime.getTimezoneOffset() * 60000;
-}
-
-
-
 //___________________________________Used on KLY symbiotes___________________________________
 
 
