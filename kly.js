@@ -331,7 +331,7 @@ METHODS_MAPPING.set('eth_getBlockByNumber',async params=>{
 
     let [blockNumberInHex,fullOrNot] = params
 
-    let block = await SYMBIOTE_META.STATE.get(CONFIG.EVM.evmID+':EVM_BLOCK:'+blockNumberInHex).catch(_=>false)
+    let block = await SYMBIOTE_META.STATE.get('EVM_BLOCK:'+blockNumberInHex).catch(_=>false)
 
     return block || {error:'No block with such index'}
     
@@ -351,9 +351,9 @@ METHODS_MAPPING.set('eth_getBlockByHash',async params=>{
 
     let [blockHash,fullOrNot] = params
 
-    let blockIndex = await SYMBIOTE_META.STATE.get(CONFIG.EVM.evmID+':EVM_INDEX:'+blockHash).catch(_=>false) // get the block index by its hash
+    let blockIndex = await SYMBIOTE_META.STATE.get('EVM_INDEX:'+blockHash).catch(_=>false) // get the block index by its hash
    
-    let block = await SYMBIOTE_META.STATE.get(CONFIG.EVM.evmID+':EVM_BLOCK:'+blockIndex).catch(_=>false)
+    let block = await SYMBIOTE_META.STATE.get('EVM_BLOCK:'+blockIndex).catch(_=>false)
 
     return block || {error:'No block with such hash'}
     
@@ -416,7 +416,7 @@ METHODS_MAPPING.set('eth_getTransactionByHash',async params=>{
 
     let [txHash] = params
 
-    let {tx} = await SYMBIOTE_META.STATE.get(CONFIG.EVM.evmID+':TX:'+txHash.slice(2)).catch(_=>false)
+    let {tx} = await SYMBIOTE_META.STATE.get('TX:'+txHash.slice(2)).catch(_=>false)
 
     return tx || {error:'No such transaction. Make sure that hash is ok'}
     
@@ -494,7 +494,7 @@ METHODS_MAPPING.set('eth_getTransactionReceipt',async params=>{
 
     let [txHash] = params
 
-    let {receipt} = await SYMBIOTE_META.STATE.get(CONFIG.EVM.evmID+':TX:'+txHash).catch(_=>false)
+    let {receipt} = await SYMBIOTE_META.STATE.get('TX:'+txHash).catch(_=>false)
 
     return receipt || false
 
@@ -623,7 +623,7 @@ METHODS_MAPPING.set('eth_getLogs',async params=>{
         
         while(fromBlock!==toBlock){
 
-            let blockLogs = await SYMBIOTE_META.STATE.get(CONFIG.EVM.evmID+':EVM_LOGS:'+web3.utils.toHex(fromBlock.toString())).catch(_=>false)
+            let blockLogs = await SYMBIOTE_META.STATE.get('EVM_LOGS:'+web3.utils.toHex(fromBlock.toString())).catch(_=>false)
 
             if(blockLogs){
 
