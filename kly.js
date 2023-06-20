@@ -46,7 +46,7 @@ METHODS_MAPPING.set('eth_syncing',_=>false)
 METHODS_MAPPING.set('eth_gasPrice',_=>CONFIG.EVM.gasPriceInWeiAndHex)
 
 
-METHODS_MAPPING.set('eth_blockNumber',_=>web3.utils.toHex(KLY_EVM.getCurrentBlock().header.number.toString()))
+METHODS_MAPPING.set('eth_blockNumber',(_,subchainID)=>global.SYMBIOTE_META.VERIFICATION_THREAD.KLY_EVM_METADATA[subchainID].NEXT_BLOCK_INDEX)
 
 
 // We'll take balances from local storage
@@ -261,7 +261,7 @@ METHODS_MAPPING.set('eth_estimateGas',async params=>{
 
 
 
-METHODS_MAPPING.set('eth_getBlockByNumber',async params=>{
+METHODS_MAPPING.set('eth_getBlockByNumber',async (params,subchainID)=>{
 
     /*
 
@@ -331,7 +331,7 @@ METHODS_MAPPING.set('eth_getBlockByNumber',async params=>{
 
     let [blockNumberInHex,fullOrNot] = params
 
-    let block = await SYMBIOTE_META.STATE.get('EVM_BLOCK:'+blockNumberInHex).catch(_=>false)
+    let block = await SYMBIOTE_META.STATE.get(`${subchainID}:EVM_BLOCK:${blockNumberInHex}`).catch(_=>false)
 
     return block || {error:'No block with such index'}
     
@@ -341,7 +341,7 @@ METHODS_MAPPING.set('eth_getBlockByNumber',async params=>{
 
 
 
-METHODS_MAPPING.set('eth_getBlockByHash',async params=>{
+METHODS_MAPPING.set('eth_getBlockByHash',async (params,subchainID) =>{
 
     /*
     
@@ -351,9 +351,9 @@ METHODS_MAPPING.set('eth_getBlockByHash',async params=>{
 
     let [blockHash,fullOrNot] = params
 
-    let blockIndex = await SYMBIOTE_META.STATE.get('EVM_INDEX:'+blockHash).catch(_=>false) // get the block index by its hash
+    let blockIndex = await SYMBIOTE_META.STATE.get(`${subchainID}:EVM_INDEX:${blockHash}`).catch(_=>false) // get the block index by its hash
    
-    let block = await SYMBIOTE_META.STATE.get('EVM_BLOCK:'+blockIndex).catch(_=>false)
+    let block = await SYMBIOTE_META.STATE.get(`${subchainID}:EVM_BLOCK:${blockIndex}`).catch(_=>false)
 
     return block || {error:'No block with such hash'}
     
@@ -505,7 +505,7 @@ METHODS_MAPPING.set('eth_getTransactionReceipt',async params=>{
 
 
 //Returns an array of all logs matching a given filter object
-METHODS_MAPPING.set('eth_getLogs',async params=>{
+METHODS_MAPPING.set('eth_getLogs',async (params,subchainID)=>{
 
 
     /*
@@ -623,7 +623,7 @@ METHODS_MAPPING.set('eth_getLogs',async params=>{
         
         while(fromBlock!==toBlock){
 
-            let blockLogs = await SYMBIOTE_META.STATE.get('EVM_LOGS:'+web3.utils.toHex(fromBlock.toString())).catch(_=>false)
+            let blockLogs = await SYMBIOTE_META.STATE.get(`${subchainID}:EVM_LOGS:${web3.utils.toHex(fromBlock.toString())}`).catch(_=>false)
 
             if(blockLogs){
 

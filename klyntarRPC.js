@@ -67,12 +67,15 @@ let RETURN_RESULT=(result,id)=>JSON.stringify(
 
 
 
-export let EVM_ROUTE_HANDLER = response => response.writeHeader('Access-Control-Allow-Origin','*').onAborted(()=>response.aborted=true).onData(async v=>{
+export let EVM_ROUTE_HANDLER = (request,response) => response.writeHeader('Access-Control-Allow-Origin','*').onAborted(()=>response.aborted=true).onData(async v=>{
 
     //Body looks like this {"jsonrpc": "2.0", "method": "subtract", "params": [42, 23], "id": 1}
     //Response looks like {"jsonrpc": "2.0", "result": 19, "id": 1}
 
     let body=await BODY(v,payloadLimit).catch(e=>e)
+
+    let subchainID = request.getParameter(0)
+
 
     if(!body) response.end(ERROR_RETURN(-32700,"Parse error",body.id))
     
@@ -80,7 +83,7 @@ export let EVM_ROUTE_HANDLER = response => response.writeHeader('Access-Control-
 
         if(METHODS_MAPPING.has(body.method)){
 
-            let result = await METHODS_MAPPING.get(body.method)(body.params)
+            let result = await METHODS_MAPPING.get(body.method)(body.params,subchainID)
 
             if(result.error) response.end(ERROR_RETURN(-32602,"Invalid params => "+result.error,body.id))
 
