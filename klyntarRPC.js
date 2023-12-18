@@ -29,22 +29,7 @@ let modules = ['web3','net','kly','db','shh']
 for(let mod of modules) await import(`./${mod}.js`)
 
 
-let payloadLimit = 100000000000; //in bytes
-
-
-//Advanced function which also check limits(useful in routes where we accept relatively small data chunks not to paste payload size checker in each handler)
-let BODY=(bytes,limit)=>{
-
-    return new Promise(
-        
-        resolve => resolve(bytes.byteLength<=limit && JSON.parse(Buffer.from(bytes)))
-        
-    ).catch(e=>e)
-
-}
-
-
-let ERROR_RETURN=(code,message,id)=>JSON.stringify(
+let ERROR_RETURN=(code,message,id)=>(
 
     {
         jsonrpc:"2.0",
@@ -54,7 +39,7 @@ let ERROR_RETURN=(code,message,id)=>JSON.stringify(
 
 )
 
-let RETURN_RESULT=(result,id)=>JSON.stringify(
+let RETURN_RESULT=(result,id)=>(
 
     {
         jsonrpc:"2.0",
@@ -67,30 +52,33 @@ let RETURN_RESULT=(result,id)=>JSON.stringify(
 
 
 
-export let EVM_ROUTE_HANDLER = (request,response) => response.writeHeader('Access-Control-Allow-Origin','*').onAborted(()=>response.aborted=true).onData(async v=>{
+export let EVM_ROUTE_HANDLER = async(request,response) => {
+
+    response.header('Access-Control-Allow-Origin','*')
 
     //Body looks like this {"jsonrpc": "2.0", "method": "subtract", "params": [42, 23], "id": 1}
     //Response looks like {"jsonrpc": "2.0", "result": 19, "id": 1}
 
-    let body=await BODY(v,payloadLimit).catch(e=>e)
+    let body = request.body
 
-    let subchainID = request.getParameter(0)
+    let shardID = request.params.shardID
 
 
-    if(!body) response.end(ERROR_RETURN(-32700,"Parse error",body.id))
+    if(!body) response.send(ERROR_RETURN(-32700,"Parse error",body.id))
     
     else if(body.jsonrpc==='2.0' && typeof body.method==='string' && Array.isArray(body.params)){
 
         if(METHODS_MAPPING.has(body.method)){
 
-            let result = await METHODS_MAPPING.get(body.method)(body.params,subchainID)
+            let result = await METHODS_MAPPING.get(body.method)(body.params,shardID)
 
             if(result.error) response.end(ERROR_RETURN(-32602,"Invalid params => "+result.error,body.id))
 
-            else response.end(RETURN_RESULT(result,body.id))
+            else response.send(RETURN_RESULT(result,body.id))
 
-        }else response.end(ERROR_RETURN(-32601,"Method not found",body.id))
+        }else response.send(ERROR_RETURN(-32601,"Method not found",body.id))
 
-    }else response.end(ERROR_RETURN(-32600,"Invalid Request",body.id))
+    }else response.send(ERROR_RETURN(-32600,"Invalid Request",body.id))
 
-})
+
+}
