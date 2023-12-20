@@ -2,7 +2,7 @@ import keccak256 from 'keccak256'
 
 
 
-METHODS_MAPPING.set('web3_clientVersion',_=>CONFIG.EVM.clientVersion)
+METHODS_MAPPING.set('web3_clientVersion',_=>global.CONFIG.KLY_EVM.clientVersion)
 
 METHODS_MAPPING.set('web3_sha3',params=>{
 

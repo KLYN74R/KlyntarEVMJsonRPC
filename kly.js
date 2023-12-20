@@ -30,10 +30,10 @@ import web3 from 'web3'
 // MUST_HAVE________________________
 
 
-METHODS_MAPPING.set('eth_chainId',_=>CONFIG.EVM.chainId)
+METHODS_MAPPING.set('eth_chainId',_=>global.CONFIG.KLY_EVM.chainId)
 
 
-METHODS_MAPPING.set('eth_protocolVersion',_=>CONFIG.EVM.protocolVersionInHex)
+METHODS_MAPPING.set('eth_protocolVersion',_=>global.CONFIG.KLY_EVM.protocolVersionInHex)
 
 
 //Or do smth with VERIFICATION_THREAD | GENERATION_THREAD
@@ -43,10 +43,10 @@ METHODS_MAPPING.set('eth_syncing',_=>false)
 //Returns the current price per gas in wei
 //do it later(we should migrate to energy)
 // + we'll add more advanced way to count
-METHODS_MAPPING.set('eth_gasPrice',_=>CONFIG.EVM.gasPriceInWeiAndHex)
+METHODS_MAPPING.set('eth_gasPrice',_=>global.CONFIG.KLY_EVM.gasPriceInWeiAndHex)
 
 
-METHODS_MAPPING.set('eth_blockNumber',(_,subchainID)=>global.SYMBIOTE_META.VERIFICATION_THREAD.KLY_EVM_METADATA[subchainID].NEXT_BLOCK_INDEX)
+METHODS_MAPPING.set('eth_blockNumber',(_,shardID)=>global.SYMBIOTE_META.VERIFICATION_THREAD.KLY_EVM_METADATA[shardID].nextBlockIndex)
 
 
 // We'll take balances from local storage
@@ -54,7 +54,7 @@ METHODS_MAPPING.set('eth_getBalance',async params=>{
 
     let [address,quantityOrTag] = params
 
-    let account = await KLY_EVM.getAccount(address).catch(_=>false)
+    let account = await global.KLY_EVM.getAccount(address).catch(_=>false)
 
     if(account){
 
@@ -74,7 +74,7 @@ METHODS_MAPPING.set('eth_getTransactionCount',async params=>{
 
     let [address,quantityOrTag] = params
 
-    let account = await KLY_EVM.getAccount(address).catch(_=>false)
+    let account = await global.KLY_EVM.getAccount(address).catch(_=>false)
 
     if(account){
 
@@ -120,7 +120,7 @@ METHODS_MAPPING.set('eth_getCode',async params=>{
 
     let [address,quantityOrTag] = params
 
-    let account = await KLY_EVM.getAccount(address).catch(_=>false)
+    let account = await global.KLY_EVM.getAccount(address).catch(_=>false)
 
     if(account){
 
@@ -192,7 +192,7 @@ METHODS_MAPPING.set('eth_sendRawTransaction',async params=>{
 
     // Execute in KLY-EVM sandbox(via runCall) to get the returnValue(if success). After all checks, we can add the tx to mempool and return a hash
     
-    let result = await KLY_EVM.sandboxCall(serializedTransactionInHexWith0x).catch(_=>false)
+    let result = await global.KLY_EVM.sandboxCall(serializedTransactionInHexWith0x).catch(_=>false)
 
     if(result){
 
@@ -227,7 +227,7 @@ METHODS_MAPPING.set('eth_call',async params=>{
 
     let [transactionData] = params
 
-    let executionResultInHex = await KLY_EVM.sandboxCall(transactionData,true).catch(_=>false)
+    let executionResultInHex = await global.KLY_EVM.sandboxCall(transactionData,true).catch(_=>false)
 
 
     if(typeof executionResultInHex === 'string') return executionResultInHex
@@ -247,7 +247,7 @@ METHODS_MAPPING.set('eth_estimateGas',async params=>{
 
     let [txData] = params
 
-    let gasRequiredInHexOrError = await KLY_EVM.estimateGasUsed(txData).catch(_=>false)
+    let gasRequiredInHexOrError = await global.KLY_EVM.estimateGasUsed(txData).catch(_=>false)
 
 
     if(typeof gasRequiredInHexOrError === 'string') return gasRequiredInHexOrError
@@ -261,7 +261,7 @@ METHODS_MAPPING.set('eth_estimateGas',async params=>{
 
 
 
-METHODS_MAPPING.set('eth_getBlockByNumber',async (params,subchainID)=>{
+METHODS_MAPPING.set('eth_getBlockByNumber',async (params,shardID)=>{
 
     /*
 
@@ -331,7 +331,7 @@ METHODS_MAPPING.set('eth_getBlockByNumber',async (params,subchainID)=>{
 
     let [blockNumberInHex,fullOrNot] = params
 
-    let block = await SYMBIOTE_META.STATE.get(`${subchainID}:EVM_BLOCK:${blockNumberInHex}`).catch(_=>false)
+    let block = await SYMBIOTE_META.STATE.get(`${shardID}:EVM_BLOCK:${blockNumberInHex}`).catch(_=>false)
 
     return block || {error:'No block with such index'}
     
@@ -341,7 +341,7 @@ METHODS_MAPPING.set('eth_getBlockByNumber',async (params,subchainID)=>{
 
 
 
-METHODS_MAPPING.set('eth_getBlockByHash',async (params,subchainID) =>{
+METHODS_MAPPING.set('eth_getBlockByHash',async (params,shardID) =>{
 
     /*
     
@@ -351,9 +351,9 @@ METHODS_MAPPING.set('eth_getBlockByHash',async (params,subchainID) =>{
 
     let [blockHash,fullOrNot] = params
 
-    let blockIndex = await SYMBIOTE_META.STATE.get(`${subchainID}:EVM_INDEX:${blockHash}`).catch(_=>false) // get the block index by its hash
+    let blockIndex = await SYMBIOTE_META.STATE.get(`${shardID}:EVM_INDEX:${blockHash}`).catch(_=>false) // get the block index by its hash
    
-    let block = await SYMBIOTE_META.STATE.get(`${subchainID}:EVM_BLOCK:${blockIndex}`).catch(_=>false)
+    let block = await SYMBIOTE_META.STATE.get(`${shardID}:EVM_BLOCK:${blockIndex}`).catch(_=>false)
 
     return block || {error:'No block with such hash'}
     
@@ -505,7 +505,7 @@ METHODS_MAPPING.set('eth_getTransactionReceipt',async params=>{
 
 
 //Returns an array of all logs matching a given filter object
-METHODS_MAPPING.set('eth_getLogs',async (params,subchainID)=>{
+METHODS_MAPPING.set('eth_getLogs',async (params,shardID)=>{
 
 
     /*
@@ -602,7 +602,7 @@ METHODS_MAPPING.set('eth_getLogs',async (params,subchainID)=>{
 
         if(fromBlock === 'latest' || toBlock === 'latest'){
 
-            currentBlockIndex = KLY_EVM.getCurrentBlock().header.number
+            currentBlockIndex = global.KLY_EVM.getCurrentBlock().header.number
     
         }
     
@@ -623,7 +623,7 @@ METHODS_MAPPING.set('eth_getLogs',async (params,subchainID)=>{
         
         while(fromBlock!==toBlock){
 
-            let blockLogs = await SYMBIOTE_META.STATE.get(`${subchainID}:EVM_LOGS:${web3.utils.toHex(fromBlock.toString())}`).catch(_=>false)
+            let blockLogs = await SYMBIOTE_META.STATE.get(`${shardID}:EVM_LOGS:${web3.utils.toHex(fromBlock.toString())}`).catch(_=>false)
 
             if(blockLogs){
 
@@ -706,7 +706,7 @@ METHODS_MAPPING.set('eth_getStorageAt',params=>{
 
 
 
-METHODS_MAPPING.set('eth_coinbase',_=>CONFIG.EVM.coinbase)
+METHODS_MAPPING.set('eth_coinbase',_=>global.CONFIG.KLY_EVM.coinbase)
 
 METHODS_MAPPING.set('eth_mining',_=>false)
 
