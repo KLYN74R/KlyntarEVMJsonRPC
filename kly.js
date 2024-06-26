@@ -30,10 +30,10 @@ import web3 from 'web3'
 // MUST_HAVE________________________
 
 
-METHODS_MAPPING.set('eth_chainId',_=>global.CONFIG.KLY_EVM.chainId)
+METHODS_MAPPING.set('eth_chainId',_=>global.KLY_EVM_OPTIONS.chainId)
 
 
-METHODS_MAPPING.set('eth_protocolVersion',_=>global.CONFIG.KLY_EVM.protocolVersionInHex)
+METHODS_MAPPING.set('eth_protocolVersion',_=>global.KLY_EVM_OPTIONS.protocolVersionInHex)
 
 
 //Or do smth with VERIFICATION_THREAD | GENERATION_THREAD
@@ -43,10 +43,10 @@ METHODS_MAPPING.set('eth_syncing',_=>false)
 //Returns the current price per gas in wei
 //do it later(we should migrate to energy)
 // + we'll add more advanced way to count
-METHODS_MAPPING.set('eth_gasPrice',_=>global.CONFIG.KLY_EVM.gasPriceInWeiAndHex)
+METHODS_MAPPING.set('eth_gasPrice',_=>global.KLY_EVM_OPTIONS.gasPriceInWeiAndHex)
 
 
-METHODS_MAPPING.set('eth_blockNumber',(_,shardID)=>global.SYMBIOTE_META.VERIFICATION_THREAD.KLY_EVM_METADATA[shardID].nextBlockIndex)
+METHODS_MAPPING.set('eth_blockNumber',(_,shardID)=>global.KLY_EVM_METADATA[shardID].nextBlockIndex)
 
 
 // We'll take balances from local storage
@@ -706,7 +706,7 @@ METHODS_MAPPING.set('eth_getStorageAt',params=>{
 
 
 
-METHODS_MAPPING.set('eth_coinbase',_=>global.CONFIG.KLY_EVM.coinbase)
+METHODS_MAPPING.set('eth_coinbase',_=>global.KLY_EVM_OPTIONS.coinbase)
 
 METHODS_MAPPING.set('eth_mining',_=>false)
 
