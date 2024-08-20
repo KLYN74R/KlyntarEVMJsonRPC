@@ -416,7 +416,7 @@ METHODS_MAPPING.set('eth_getTransactionByHash',async params=>{
 
     let [txHash] = params
 
-    let {tx} = await global.STATE.get('TX:'+txHash.slice(2)).catch(_=>false)
+    let {tx} = await global.STATE.get('TX:'+txHash).catch(_=>false)
 
     return tx || {error:'No such transaction. Make sure that hash is ok'}
     
