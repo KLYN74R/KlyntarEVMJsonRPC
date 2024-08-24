@@ -63,10 +63,11 @@ export let EVM_ROUTE_HANDLER = async(request,response) => {
 
     let shardID = request.params.shardID
 
+    let paramsAreOk = body?.params ? Array.isArray(body.params) : true 
 
     if(!body) response.send(ERROR_RETURN(-32700,"Parse error",body.id))
     
-    else if(body.jsonrpc==='2.0' && typeof body.method==='string' && Array.isArray(body.params)){
+    else if(body.jsonrpc==='2.0' && typeof body.method==='string' && paramsAreOk){
 
         if(METHODS_MAPPING.has(body.method)){
 
