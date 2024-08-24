@@ -46,7 +46,13 @@ METHODS_MAPPING.set('eth_syncing',_=>false)
 METHODS_MAPPING.set('eth_gasPrice',_=>global.KLY_EVM_OPTIONS.gasPriceInWeiAndHex)
 
 
-METHODS_MAPPING.set('eth_blockNumber',(_,shardID)=>global.KLY_EVM_METADATA[shardID].nextBlockIndex)
+METHODS_MAPPING.set('eth_blockNumber',(_,shardID)=>{
+
+    let latestIndex = BigInt(global.KLY_EVM_METADATA[shardID].nextBlockIndex)-BigInt(1)
+
+    return web3.utils.toHex(latestIndex.toString())
+
+})
 
 
 // We'll take balances from local storage
@@ -329,11 +335,19 @@ METHODS_MAPPING.set('eth_getBlockByNumber',async (params,shardID)=>{
 
     */
 
-    let [blockNumberInHex,fullOrNot] = params
+        let [blockNumberInHex,fullOrNot] = params
 
-    let block = await global.STATE.get(`${shardID}:EVM_BLOCK:${blockNumberInHex}`).catch(_=>false)
-
-    return block || {error:'No block with such index'}
+        if(blockNumberInHex === 'latest'){
+    
+            let latestIndex = BigInt(global.KLY_EVM_METADATA[shardID].nextBlockIndex)-BigInt(1)
+            
+            blockNumberInHex = web3.utils.toHex(latestIndex.toString())
+    
+        }
+    
+        let block = await global.STATE.get(`${shardID}:EVM_BLOCK:${blockNumberInHex}`).catch(_=>false)
+    
+        return block || {error:'No block with such index'}
     
 
 })
@@ -495,6 +509,14 @@ METHODS_MAPPING.set('eth_getTransactionReceipt',async params=>{
     let [txHash] = params
 
     let {receipt} = await global.STATE.get('TX:'+txHash).catch(_=>false)
+
+    if(receipt){
+
+        if(receipt.status === 1) receipt.status = "0x1"
+
+        else receipt.status = "0x0"
+
+    }
 
     return receipt || false
 
