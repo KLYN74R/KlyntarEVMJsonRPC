@@ -73,7 +73,7 @@ export let EVM_ROUTE_HANDLER = async(request,response) => {
 
             let result = await METHODS_MAPPING.get(body.method)(body.params,shardID)
 
-            if(result.error) response.end(ERROR_RETURN(-32602,"Invalid params => "+result.error,body.id))
+            if(result.error) response.send(ERROR_RETURN(-32602,"Invalid params => "+result.error,body.id))
 
             else response.send(RETURN_RESULT(result,body.id))
 

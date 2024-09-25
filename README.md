@@ -1,7 +1,5 @@
 <div align="center">
 
-# A modified JSON-RPC 2.0 for KLY-EVM
-
-<img src="./main.svg">
+# A modified JSON-RPC 2.0 for KLYNTAR EVM
 
 </div>
