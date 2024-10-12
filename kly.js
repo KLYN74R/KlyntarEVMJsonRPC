@@ -20,8 +20,8 @@
 */
 
 import {Transaction} from '@ethereumjs/tx'
-import web3 from 'web3'
 
+import Web3 from 'web3'
 
 
 //___________________________________Used on KLY symbiotes___________________________________
@@ -50,7 +50,7 @@ METHODS_MAPPING.set('eth_blockNumber',(_,shardID)=>{
 
     let latestIndex = BigInt(global.KLY_EVM_METADATA[shardID].nextBlockIndex)-BigInt(1)
 
-    return web3.utils.toHex(latestIndex.toString())
+    return Web3.utils.toHex(latestIndex.toString())
 
 })
 
@@ -64,7 +64,7 @@ METHODS_MAPPING.set('eth_getBalance',async params=>{
 
     if(account){
 
-        let balanceInHexAndInWei = web3.utils.toHex(account.balance.toString())
+        let balanceInHexAndInWei = Web3.utils.toHex(account.balance.toString())
 
         return balanceInHexAndInWei
     
@@ -84,7 +84,7 @@ METHODS_MAPPING.set('eth_getTransactionCount',async params=>{
 
     if(account){
 
-        let nonceInHex = web3.utils.toHex(account.nonce.toString())
+        let nonceInHex = Web3.utils.toHex(account.nonce.toString())
 
         return nonceInHex
     
@@ -190,7 +190,7 @@ METHODS_MAPPING.set('eth_sendTransaction',params=>{
 
 
 //Creates new message call transaction or a contract creation for signed transactions
-METHODS_MAPPING.set('eth_sendRawTransaction',async params=>{
+METHODS_MAPPING.set('eth_sendRawTransaction',async (params,shardID)=>{
 
     // The signed transaction data
     let [serializedTransactionInHexWith0x] = params
@@ -205,8 +205,23 @@ METHODS_MAPPING.set('eth_sendRawTransaction',async params=>{
         // It might be an error
         if(result.error) return {error:JSON.stringify(result)}
 
+        // In case we don't the current shard leader - tx should be redirected to the CURRENT shard leader to be included to block immediately
 
-        global.MEMPOOL.push({type:'EVM_CALL',payload:serializedTransactionInHexWith0x})
+        let whoIsShardLeader = await global.getCurrentShardLeaderURL(shardID) // {isMeShardLeader: bool, url(?)}
+
+        if(whoIsShardLeader.isMeShardLeader){
+
+            global.MEMPOOL.push({type:'EVM_CALL',payload:serializedTransactionInHexWith0x})
+
+        } else if (!whoIsShardLeader.isMeShardLeader && whoIsShardLeader.url){
+
+            const web3 = new Web3(`${whoIsShardLeader.url}/kly_evm_rpc/${shardID}`)
+
+            // Send to target mempool
+
+            web3.eth.sendSignedTransaction(serializedTransactionInHexWith0x, () => {})
+
+        }
 
         try{
 
@@ -341,7 +356,7 @@ METHODS_MAPPING.set('eth_getBlockByNumber',async (params,shardID)=>{
     
             let latestIndex = BigInt(global.KLY_EVM_METADATA[shardID].nextBlockIndex)-BigInt(1)
             
-            blockNumberInHex = web3.utils.toHex(latestIndex.toString())
+            blockNumberInHex = Web3.utils.toHex(latestIndex.toString())
     
         }
     
@@ -613,9 +628,9 @@ METHODS_MAPPING.set('eth_getLogs',async (params,shardID)=>{
     let currentBlockIndex
 
 
-    let fromBlockIsHex = web3.utils.isHex(fromBlock)
+    let fromBlockIsHex = Web3.utils.isHex(fromBlock)
 
-    let toBlockIsHex = web3.utils.isHex(toBlock)
+    let toBlockIsHex = Web3.utils.isHex(toBlock)
 
 
     
@@ -645,7 +660,7 @@ METHODS_MAPPING.set('eth_getLogs',async (params,shardID)=>{
         
         while(fromBlock!==toBlock){
 
-            let blockLogs = await global.STATE.get(`${shardID}:EVM_LOGS:${web3.utils.toHex(fromBlock.toString())}`).catch(_=>false)
+            let blockLogs = await global.STATE.get(`${shardID}:EVM_LOGS:${Web3.utils.toHex(fromBlock.toString())}`).catch(_=>false)
 
             if(blockLogs){
 
